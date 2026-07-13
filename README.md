@@ -63,19 +63,20 @@ with explain-mode:
 
 ## Install
 
-Give your AI coding agent this repository's URL and ask it to install the
-skill. For example, paste this into Claude Code, Cursor, or a similar tool:
+Paste this into Claude Code, Cursor, or a similar tool. Be this explicit —
+a vaguer "install the skill from this repo" sometimes makes the agent just
+read the repo and describe it instead of installing:
 
 ```
-Please install the skill from https://github.com/maoratlas/explain-mode
-into this project.
+Install the explain-mode skill: fetch
+https://raw.githubusercontent.com/maoratlas/explain-mode/main/skills/explain-mode/SKILL.md
+and save it as .claude/skills/explain-mode/SKILL.md in this project, then
+confirm the file exists. Actually install it now, don't just describe the repo.
 ```
 
-A capable agent will fetch `skills/explain-mode/SKILL.md` from this repo and
-copy it into the right place for your tool automatically (for Claude Code,
-that's `.claude/skills/explain-mode/SKILL.md`, at the project or user
-level; Cursor and Codex read their own `skills/` directories and, for
-compatibility, `.claude/skills/` too).
+That destination works across tools: Claude Code reads
+`.claude/skills/` natively, and Cursor and Codex read it too for
+compatibility, alongside their own `skills/` directories.
 
 Alternatively, use the standard [skills CLI](https://github.com/vercel-labs/skills),
 which detects this repo's layout and installs into the right directory for
@@ -83,13 +84,6 @@ whichever agent you use:
 
 ```
 npx skills add maoratlas/explain-mode
-```
-
-And if your agent needs a more explicit instruction, use:
-
-```
-Fetch https://raw.githubusercontent.com/maoratlas/explain-mode/main/skills/explain-mode/SKILL.md
-and save it as .claude/skills/explain-mode/SKILL.md in this project.
 ```
 
 No dependencies, no build step, no server — it's a single Markdown file

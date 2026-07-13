@@ -3,7 +3,7 @@ name: explain-mode
 description: Activate a persistent teaching mode for someone new to coding, working alongside an AI coding agent (Claude Code, Cursor, Codex, or similar). Long explanations, lessons, and code walkthroughs are written to a standalone HTML page and opened for comfortable reading, while the agent chat stays short and is used only for the learner's answers and next steps. Supports right-to-left languages (Hebrew, Arabic, etc.) out of the box. Use when the user invokes /explain-mode, and keep following these rules for the rest of the conversation until they ask to stop, exit, or disable it.
 ---
 
-# Explain Mode (v0.1)
+# Explain Mode (v0.2)
 
 Explain Mode turns an AI coding agent into a patient teacher for someone new
 to programming, working around the limits of a terminal chat: long text is
@@ -27,12 +27,16 @@ directly, or by reading a project-level config if one exists (e.g. an
 `EXPLAIN_MODE.md` or similar file in the repo root, if the user has created
 one):
 
-- **Language and direction.** Default: English, left-to-right (LTR). If the
-  learner's language is RTL (Hebrew, Arabic, Persian, Urdu, etc.), switch
-  every page to `dir="rtl"`, right-aligned text, and the LTR-isolation rules
-  below for code/commands. Ask once if unclear; don't guess from the
-  conversation's language alone, since the user may be typing to the agent
-  in one language while teaching in another.
+- **Language and direction.** Default: the language the learner actually
+  writes in. If the learner talks to the agent in Hebrew, teach in Hebrew;
+  in Arabic, teach in Arabic; and so on — announce the choice briefly in
+  the first reply so it's easy to correct. For RTL languages (Hebrew,
+  Arabic, Persian, Urdu, etc.), switch every page to `dir="rtl"`,
+  right-aligned text, and the LTR-isolation rules below for code/commands.
+  Ask once, before the first lesson page, only when signals conflict or
+  nothing is clear (e.g. a parent sets things up in English for a child
+  who learns in another language). A project-level config, when present,
+  wins over both.
 - **Learner profile.** Default: a curious beginner, no assumed age. If told
   the learner is a specific age (e.g. a child), calibrate vocabulary,
   sentence length, and pacing accordingly, but don't assume "beginner"
@@ -125,14 +129,21 @@ click required:
    editor** for `.html` files. See "One-time setup: click-free HTML
    preview" below — without it, this step still opens the file, just as
    source, which is a worse experience but not a failure.
-2. Do not also open the page in the OS default browser as well as the
+2. The first time a lesson page is opened in a conversation, check whether
+   click-free preview is actually configured — the editor's user
+   `settings.json` should have a `workbench.editorAssociations` entry for
+   `*.html`. If it doesn't, the page just opened as raw HTML source: say so
+   plainly and offer to walk the user through the one-time setup below.
+   Offer once per conversation, not on every lesson, and never change the
+   global setting without the user's confirmation.
+3. Do not also open the page in the OS default browser as well as the
    editor. Opening two windows for one lesson just steals focus and
    switches apps, which is exactly the kind of friction this skill exists
    to remove. Use `open "<path-to-file>"` (macOS) / `xdg-open` (Linux) /
    `start` (Windows) as a fallback ONLY if no editor CLI is available —
    never fail the lesson just because a rendered preview isn't available.
-3. Quote all paths safely.
-4. In the short chat reply, state plainly where the page opened.
+4. Quote all paths safely.
+5. In the short chat reply, state plainly where the page opened.
 
 ### One-time setup: click-free HTML preview
 
@@ -267,8 +278,14 @@ explicit permission.
 
 ## Version
 
-This is version 0.1: simple and reliable on purpose. It intentionally does
+This is version 0.2: simple and reliable on purpose. It intentionally does
 not include automatic cleanup of old pages, lesson navigation, a local
 server, auto-refresh, JavaScript interaction, a dedicated editor extension,
 progress tracking, text-to-speech, or extra package dependencies. Expect
 this skill to evolve as real lessons surface new needs.
+
+v0.2 refined installation (an explicit, self-contained install prompt so
+agents actually install instead of just describing the repo), added a
+proactive one-time offer to set up click-free HTML preview, and switched
+the language default from English to whatever language the learner
+actually writes in.
