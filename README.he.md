@@ -81,25 +81,27 @@
 
 ## התקנה
 
-תנו לסוכן הקידוד שלכם את הכתובת של המאגר הזה, ובקשו ממנו להתקין את
-המיומנות. לדוגמה, הדביקו את זה בתוך
+הדביקו את זה בתוך
 <span class="ltr" dir="ltr" style="unicode-bidi:isolate">Claude Code, Cursor</span>,
-או כלי דומה:
+או כלי דומה. חשוב להיות מפורשים ברמה הזאת — בקשה כללית כמו "תתקין את
+המיומנות מהמאגר" גורמת לפעמים לסוכן רק לקרוא את המאגר ולתאר אותו, בלי
+להתקין:
 
 <pre dir="ltr" style="unicode-bidi:isolate; text-align:left;">
-Please install the skill from https://github.com/maoratlas/explain-mode
-into this project.
+Install the explain-mode skill: fetch
+https://raw.githubusercontent.com/maoratlas/explain-mode/main/skills/explain-mode/SKILL.md
+and save it as .claude/skills/explain-mode/SKILL.md in this project, then
+confirm the file exists. Actually install it now, don't just describe the repo.
 </pre>
 
-סוכן מספיק יכולת יביא את הקובץ
-<code class="ltr" dir="ltr" style="unicode-bidi:isolate">skills/explain-mode/SKILL.md</code>
-מהמאגר הזה ויעתיק אותו למקום הנכון עבור הכלי שלכם באופן אוטומטי (עבור
-<span class="ltr" dir="ltr" style="unicode-bidi:isolate">Claude Code</span>,
-זה
-<code class="ltr" dir="ltr" style="unicode-bidi:isolate">.claude/skills/explain-mode/SKILL.md</code>,
-ברמת הפרויקט או המשתמש; <span class="ltr" dir="ltr" style="unicode-bidi:isolate">Cursor</span>
+היעד הזה עובד בכל הכלים:
+<span class="ltr" dir="ltr" style="unicode-bidi:isolate">Claude Code</span>
+קורא את
+<code class="ltr" dir="ltr" style="unicode-bidi:isolate">.claude/skills/</code>
+באופן מובנה, וגם
+<span class="ltr" dir="ltr" style="unicode-bidi:isolate">Cursor</span>
 ו־<span class="ltr" dir="ltr" style="unicode-bidi:isolate">Codex</span>
-קוראים גם את התיקייה הזאת, לצד תיקיות משלהם).
+קוראים אותו לצורך תאימות, לצד תיקיות משלהם.
 
 אפשרות נוספת: כלי ההתקנה הסטנדרטי
 <a href="https://github.com/vercel-labs/skills"><span class="ltr" dir="ltr" style="unicode-bidi:isolate">skills CLI</span></a>,
@@ -107,13 +109,6 @@ into this project.
 
 <pre dir="ltr" style="unicode-bidi:isolate; text-align:left;">
 npx skills add maoratlas/explain-mode
-</pre>
-
-ואם הסוכן שלכם צריך הנחיה מפורשת יותר, השתמשו ב:
-
-<pre dir="ltr" style="unicode-bidi:isolate; text-align:left;">
-Fetch https://raw.githubusercontent.com/maoratlas/explain-mode/main/skills/explain-mode/SKILL.md
-and save it as .claude/skills/explain-mode/SKILL.md in this project.
 </pre>
 
 בלי תלויות, בלי שלב בנייה, בלי שרת — זהו קובץ
