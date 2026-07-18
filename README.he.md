@@ -23,6 +23,10 @@
 עצמאי וקריא, ופותח אותו אוטומטית — בזמן שהצ'אט עצמו נשאר קצר ומשמש רק
 לתשובות ולצעדים הבאים של הלומד.
 
+דפי השיעור נוצרים על ידי סקריפט מובנה ללא תלויות — הסוכן כותב רק את תוכן
+השיעור עצמו — וכשהפרויקט שלכם הוא בעצמו דפי אינטרנט, השיעורים יכולים
+להיפתח רק לפי בקשה, במקום להתחרות בפלט של האפליקציה שלכם.
+
 ## איך זה נראה בפועל
 
 אותה שאלה — "תסביר לי מה זה API" — נשאלה בעברית, בלי ועם explain-mode:
@@ -59,6 +63,10 @@
   ושפות נוספות שנכתבות מימין לשמאל מוצגות עם כיוון וטקסט מיושר נכון, בעוד
   שקוד, פקודות ונתיבי קבצים נשארים מבודדים נכון משמאל לימין באותו דף — בלי
   יותר טקסט מעורבב שהופך לבלגן.
+- **דפים עקביים וחסכוניים, מיוצרים על ידי סקריפט.** סקריפט קטן ללא תלויות
+  בונה כל דף מתוכן השיעור בלבד: עיצוב זהה בכל פעם, חותמות זמן נכונות,
+  ובידוד כיווניות שנעשה מכנית — והבינה המלאכותית משקיעה טוקנים רק בשיעור
+  עצמו.
 - **סגנון הוראה מותאם לילדים, כברירת מחדל.** משפטים קצרים, רעיון אחד בכל
   דף, דוגמה אחת, שאלה או משימה קטנה אחת — הסוכן מקבל הנחיה ללמד כמו מורה
   פרטי סבלני, לא לדהור קדימה כמו קבלן עצמאי.
@@ -90,8 +98,10 @@
 <pre dir="ltr" style="unicode-bidi:isolate; text-align:left;">
 Install the explain-mode skill: fetch
 https://raw.githubusercontent.com/maoratlas/explain-mode/main/skills/explain-mode/SKILL.md
-and save it as .claude/skills/explain-mode/SKILL.md in this project, then
-confirm the file exists. Actually install it now, don't just describe the repo.
+and save it as .claude/skills/explain-mode/SKILL.md in this project, then fetch
+https://raw.githubusercontent.com/maoratlas/explain-mode/main/skills/explain-mode/scripts/explain_page.py
+and save it as .claude/skills/explain-mode/scripts/explain_page.py, then
+confirm both files exist. Actually install it now, don't just describe the repo.
 </pre>
 
 היעד הזה עובד בכל הכלים:
@@ -111,24 +121,32 @@ confirm the file exists. Actually install it now, don't just describe the repo.
 npx skills add maoratlas/explain-mode
 </pre>
 
-בלי תלויות, בלי שלב בנייה, בלי שרת — זהו קובץ
+בלי שרת, בלי שלב בנייה, בלי חבילות להתקין — קובץ מיומנות
 <span class="ltr" dir="ltr" style="unicode-bidi:isolate">Markdown</span>
-אחד.
+ועוד סקריפט
+<span class="ltr" dir="ltr" style="unicode-bidi:isolate">Python</span>
+קטן אחד, ללא שום תלויות חיצוניות.
 
-### אופציונלי: תצוגה מקדימה של <span class="ltr" dir="ltr" style="unicode-bidi:isolate">HTML</span> בלי קליק
+הסקריפט צריך
+<span class="ltr" dir="ltr" style="unicode-bidi:isolate">Python 3</span>,
+שקיים ממילא ברוב המחשבים. אם אצלכם אין, המיומנות תציע — פעם אחת, בשפה
+פשוטה — לעזור להתקין אותו, ותסביר למה זה משתלם (שיעורים מהירים יותר,
+זולים יותר ואחידים יותר). אם תעדיפו שלא, הכול עדיין עובד: הסוכן פשוט
+יכתוב כל דף בעצמו, כמו בגרסאות הקודמות.
 
-כברירת מחדל, פתיחת דף שיעור עשויה לדרוש קליק ידני אחד כדי לעבור מקוד
-מקור גולמי לתצוגה מקדימה מוצגת, תלוי בעורך שלכם. קובץ המיומנות כולל
-קטע **הגדרה חד־פעמית** קצר וניתן להעתקה
+### אופציונלי: שיעורים בתוך העורך עצמו
+
+כברירת מחדל, דפי שיעור נפתחים בדפדפן — כבר מעוצבים ומוצגים, אפס
+קליקים, עובד בכל מקום. אם אתם מעדיפים שהכול יישאר בתוך
+<span class="ltr" dir="ltr" style="unicode-bidi:isolate">VS Code</span>,
+קובץ המיומנות כולל קטע **הגדרה חד־פעמית** קצר
 (<span class="ltr" dir="ltr" style="unicode-bidi:isolate">"One-time setup: click-free HTML preview"</span>)
-שמסיר את הקליק הזה לגמרי עבור
-<span class="ltr" dir="ltr" style="unicode-bidi:isolate">VS Code</span>
-ועורכים מבוססי
-<span class="ltr" dir="ltr" style="unicode-bidi:isolate">VS Code</span>
-(<span class="ltr" dir="ltr" style="unicode-bidi:isolate">Cursor</span>
-וכדומה). בקשו מהסוכן שלכם ללוות אתכם בתהליך, או פתחו את
+שגורם לדפי שיעור להיפתח כתצוגה מעוצבת בתוך העורך עצמו. בקשו מהסוכן
+שלכם ללוות אתכם בתהליך, או פתחו את
 <code class="ltr" dir="ltr" style="unicode-bidi:isolate">skills/explain-mode/SKILL.md</code>
-ועקבו אחרי הקטע הזה בעצמכם.
+ועקבו אחרי הקטע הזה בעצמכם. שימו לב: ב־<span class="ltr" dir="ltr" style="unicode-bidi:isolate">Cursor</span>
+ייתכן שלא יימצא תוסף תצוגה מתאים במאגר התוספים שלו — שם פשוט נשארים
+עם הדפדפן, וזה בסדר גמור.
 
 ## שימוש
 
