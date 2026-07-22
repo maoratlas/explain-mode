@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""explain-mode page generator (part of the explain-mode skill, v0.2.1).
+"""explain-mode page generator (part of the explain-mode skill, v0.2.2).
 
 Takes lesson content and produces a standalone, self-contained HTML page in
 .tmp/ at the repo root, then opens it already rendered (editor preview when
@@ -20,6 +20,8 @@ Markdown subset understood in simple mode:
   blank line    paragraph break
   `inline`      isolated LTR <code>
   ``` fences    isolated LTR <pre><code>
+  ```flow       one step per line -> vertical flow diagram (RTL-safe;
+                use this instead of ASCII arrows, which bidi scrambles)
   > lines       highlighted callout box
   - lists       unordered list
   1. lists      ordered list
@@ -90,6 +92,18 @@ pre, code, .ltr { direction: ltr; text-align: left; unicode-bidi: isolate; }
   border-radius: 0.5rem; padding: 1rem 1.2rem; margin: 0 0 1.3rem;
 }
 .callout p:last-child { margin-bottom: 0; }
+/* Vertical flow: steps stack downward, so the connector arrow is never
+   subject to bidi reordering the way inline "-->" art is. */
+.flow { list-style: none; padding: 0; margin: 0 0 1.3rem; }
+.flow > li {
+  background: var(--code-bg); border: 1px solid var(--border);
+  border-radius: 0.6rem; padding: 0.7rem 1rem; text-align: center;
+}
+.flow > li + li { margin-top: 2.4rem; position: relative; }
+.flow > li + li::before {
+  content: "\\2193"; position: absolute; top: -2.1rem; inset-inline: 0;
+  text-align: center; font-size: 1.4rem; line-height: 1; color: var(--accent);
+}
 """
 
 PAGE = """\
@@ -130,6 +144,13 @@ MIXED_TOKEN = re.compile(
 
 UL_ITEM = re.compile(r"[-*]\s+")
 OL_ITEM = re.compile(r"\d+[.)]\s+")
+
+RTL_CHARS = re.compile(r"[֐-ࣿﭐ-﷿ﹰ-﻿]")
+
+# ASCII/Unicode arrow and box art. Mixed with RTL text the bidi algorithm
+# reorders labels against arrows and the diagram becomes unreadable —
+# exactly the failure the ```flow fence exists to prevent.
+ARROW_ART = re.compile(r"--+>|<--+|->|<-|=>|<=|[→←⟶⟵─│┌┐└┘├┤┬┴┼╔╗╚╝═║]")
 
 
 def repo_root() -> Path:
@@ -198,17 +219,34 @@ def inline(text: str, rtl: bool, store: list) -> str:
     return text
 
 
+def resolve(text: str, store: list) -> str:
+    """Substitute placeholders, repeating for nested ones (flow steps hold
+    inline-code placeholders created before the flow itself)."""
+    for _ in range(10):
+        new = PLACEHOLDER_RE.sub(lambda m: store[int(m.group(1))], text)
+        if new == text:
+            break
+        text = new
+    return text
+
+
 def md_to_html(md: str, rtl: bool) -> str:
     """Convert the simple-mode markdown subset to body HTML."""
     store: list = []
 
     def fence_repl(m):
-        store.append(
-            "<pre><code>%s</code></pre>" % html.escape(m.group(1).rstrip("\n"))
-        )
+        info, content = m.group(1).strip().lower(), m.group(2)
+        if info == "flow":
+            steps = [l.strip() for l in content.strip().splitlines() if l.strip()]
+            items = "".join(f"<li>{inline(s, rtl, store)}</li>" for s in steps)
+            store.append(f'<ol class="flow">{items}</ol>')
+        else:
+            store.append(
+                "<pre><code>%s</code></pre>" % html.escape(content.rstrip("\n"))
+            )
         return "\n\n" + PLACEHOLDER.format(len(store) - 1) + "\n\n"
 
-    md = re.sub(r"```[^\n]*\n(.*?)```", fence_repl, md, flags=re.S)
+    md = re.sub(r"```([^\n]*)\n(.*?)```", fence_repl, md, flags=re.S)
 
     out = []
     for block in re.split(r"\n\s*\n", md.strip()):
@@ -244,8 +282,7 @@ def md_to_html(md: str, rtl: bool) -> str:
         else:
             out.append(f"<p>{inline(' '.join(lines), rtl, store)}</p>")
 
-    body = "\n".join(out)
-    return PLACEHOLDER_RE.sub(lambda m: store[int(m.group(1))], body)
+    return resolve("\n".join(out), store)
 
 
 def warn_mixed_tokens(text: str) -> None:
@@ -254,6 +291,20 @@ def warn_mixed_tokens(text: str) -> None:
         if tok not in seen:
             seen.add(tok)
             print(f'WARN mixed RTL/Latin letters inside one word: "{tok}" — check for a stray Latin glyph')
+
+
+def warn_arrow_art(text: str) -> None:
+    """Flag hand-drawn arrow/box diagrams mixed with RTL text — they render
+    scrambled no matter how the page is styled."""
+    for line in text.splitlines():
+        if ARROW_ART.search(line) and RTL_CHARS.search(line):
+            snippet = line.strip()[:60]
+            print(
+                f'WARN arrow/box diagram mixed with RTL text: "{snippet}" — '
+                "bidi will scramble it; use a ```flow fence (simple mode) or "
+                '<ol class="flow"> (rich mode) instead'
+            )
+            return
 
 
 def editor_open_cmd():
@@ -350,16 +401,18 @@ def main() -> int:
         body = md_to_html(raw, rtl)
         if rtl:
             warn_mixed_tokens(raw)
+            warn_arrow_art(raw)
     else:
         body = raw.strip()
         if rtl:
-            warn_mixed_tokens(re.sub(r"<[^>]+>", " ", body))
+            stripped = re.sub(r"<[^>]+>", " ", body)
+            warn_mixed_tokens(stripped)
+            warn_arrow_art(stripped)
 
     store: list = []
     heading = ""
     if args.title:
-        heading = f"<h1>{inline(args.title, rtl, store)}</h1>\n"
-        heading = PLACEHOLDER_RE.sub(lambda m: store[int(m.group(1))], heading)
+        heading = resolve(f"<h1>{inline(args.title, rtl, store)}</h1>\n", store)
 
     root = repo_root()
     check_gitignore(root)

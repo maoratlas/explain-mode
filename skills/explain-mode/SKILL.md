@@ -3,7 +3,7 @@ name: explain-mode
 description: Activate a persistent teaching mode for someone new to coding, working alongside an AI coding agent (Claude Code, Cursor, Codex, or similar). Long explanations, lessons, and code walkthroughs are generated into a standalone HTML page by a bundled zero-dependency script and opened for comfortable reading, while the agent chat stays short and is used only for the learner's answers and next steps. Supports right-to-left languages (Hebrew, Arabic, etc.) out of the box. Use when the user invokes /explain-mode, and keep following these rules for the rest of the conversation until they ask to stop, exit, or disable it.
 ---
 
-# Explain Mode (v0.2.1)
+# Explain Mode (v0.2.2)
 
 Explain Mode turns an AI coding agent into a patient teacher for someone new
 to programming, working around the limits of a terminal chat: long text is
@@ -83,16 +83,34 @@ Create a new page when the response:
 - is a lesson, exercise, question, or summary,
 - explains an error in a way meant to teach.
 
-**For RTL learners the bar is lower.** Mixed Hebrew/English (or
-Arabic/English) text in the chat is exactly the readability failure this
-skill exists to prevent, and the script makes pages cheap — so even a
-short substantive answer (two or three sentences containing any English
-terms, code, or paths) goes to a page. Only genuinely trivial one-line
-replies stay inline.
-
 Skip the page for tiny operational replies: "Done.", "Save the file.",
 "Refresh the page.", "Yes, that's correct." When unsure, prefer creating
 the page.
+
+### For RTL learners: length is not the test
+
+In an RTL language (Hebrew, Arabic, etc.), **every substantive reply goes
+to a page, however short.** Do not judge by length. A four-line answer is
+more than long enough to mix Hebrew and English — a filename, an `API`
+name, a variable like `simplifiedMock` — and every such mix is a chance
+for the chat to reorder the line, strand the punctuation, and produce
+exactly the scrambled text this skill exists to prevent.
+
+Two things follow from this:
+
+- **Any reply containing English words, code, filenames, paths, or
+  numbers-with-units goes to a page.** Length is irrelevant; the mix is
+  what matters.
+- **The learner expects to read on the page.** Once Explain Mode is on,
+  the page is where answers live. Answering substantively in the chat
+  breaks that expectation and sends the learner looking for a page that
+  was never created — even when the answer happened to be short.
+
+Only bare operational acknowledgements with no English in them stay in
+the chat ("בוצע.", "תשמור את הקובץ."). Everything else — explanations,
+answers to questions, summaries of what changed, descriptions of what a
+command did, suggestions of what to do next — gets a page. When in doubt
+in an RTL language, make the page; pages are cheap now.
 
 ## Separation between chat and lesson page
 
@@ -177,6 +195,8 @@ Act on the script's output:
 - `PAGE <path>` / `OPENED …` — relay briefly in the chat reply.
 - `WARN mixed RTL/Latin letters …` — fix the flagged word in the content
   and regenerate before sending the learner to the page.
+- `WARN arrow/box diagram mixed with RTL text …` — replace the hand-drawn
+  diagram with a ```` ```flow ```` fence and regenerate.
 - `WARN .tmp/ is not in .gitignore` — add `.tmp/` to `.gitignore` once.
   Never stage or commit generated pages.
 
@@ -191,8 +211,41 @@ The content file is a small markdown subset — write content, not markup:
   `<code>` boxes. The script also auto-isolates bare Latin runs as a
   safety net, but backtick-marking is the primary mechanism.
 - ``` fenced blocks for multi-line code
+- ```` ```flow ```` fenced blocks for a step-by-step flow (see below)
 - `>` lines for one highlighted callout (the key idea)
 - `-` and `1.` lists, `**bold**`
+
+### Flows and diagrams: never draw arrows by hand
+
+**Never draw a flow as ASCII or box art** — `A --> B --> C`, boxes made of
+`+---+`, arrows made of `<--`. In an RTL page this fails badly and
+unfixably: the bidi algorithm reorders the RTL labels against the LTR
+arrows, so the arrows end up pointing at the wrong boxes and the diagram
+becomes unreadable nonsense. No amount of styling repairs it, because the
+scrambling happens at the text level, not the CSS level. This has already
+shipped a garbled diagram to a child once.
+
+Instead, use the ```` ```flow ```` fence — one step per line, no arrows:
+
+````text
+```flow
+דפדפן (`index.html`)
+השרת שלנו
+שירות ה-`AI`
+```
+````
+
+The script renders this as a vertical column of boxes with a downward
+arrow between them. Vertical arrows can't be flipped by bidi, so the flow
+reads correctly in any language, and each step's code and English terms
+stay isolated as usual.
+
+For a flow that genuinely needs to branch or loop, describe it as a
+numbered list in prose ("1 sends to 2; if it fails, 2 answers directly"),
+or use rich mode. The script warns (`WARN arrow/box diagram mixed with RTL
+text`) whenever it sees hand-drawn arrows next to RTL text — treat that
+warning as a bug to fix before the learner sees the page, not a
+suggestion.
 
 ### Rich mode (`--mode rich`)
 
@@ -212,6 +265,11 @@ CSS, filename, badge, and opening.
   e.g. in Hebrew, `י`/yud visually resembling Latin `i` — plus awkward
   punctuation around mixed-direction text. The script still prints
   mixed-glyph warnings for the text it can see.
+- For flows, use `<ol class="flow"><li>…</li></ol>` — the same vertical
+  flow component the ```` ```flow ```` fence produces, styled by the base
+  CSS. The ban on hand-drawn ASCII arrows applies here too. Real branching
+  diagrams may use inline `<style>`/`<svg>`, but lay them out vertically
+  and keep every label in its own element.
 
 Use simple mode by default; rich mode is for when the extra structure
 teaches something the simple layout can't.
@@ -328,6 +386,8 @@ code,
 - Before saving an RTL page, re-read the text for Latin letters embedded
   inside RTL words, awkward punctuation around mixed-direction text, and
   consistent UTF-8.
+- Flows are still vertical, never hand-drawn arrows: stack each step in
+  its own block element with a downward arrow between them.
 - Open browser-first, exactly per "Opening behavior" above.
 
 ## Teaching style
@@ -371,7 +431,7 @@ explicit permission.
 
 ## Version
 
-This is version 0.2.1: simple and reliable on purpose. It intentionally
+This is version 0.2.2: simple and reliable on purpose. It intentionally
 does not include automatic cleanup of old pages, lesson navigation, a
 local server, auto-refresh, a dedicated editor extension, progress
 tracking, text-to-speech, or extra package dependencies. (JavaScript is
@@ -403,3 +463,18 @@ still leaking into the chat. First activation now checks once for Python
 and, when it's missing, offers the install in plain language (faster,
 cheaper, more consistent lessons) — declining falls back cleanly to
 hand-written pages and is never nagged about again.
+
+v0.2.2 closed two gaps found while teaching with v0.2.1. A short reply
+about the state of the project — four lines, but carrying `index.html`,
+`API`, and a variable name — was answered in the chat, where the mixed
+Hebrew/English reordered and the punctuation landed in the wrong place;
+the RTL rule is now unconditional (every substantive reply gets a page,
+length is not the test) and states the reason the learner feels: once
+Explain Mode is on, the page is where answers live. Separately, a data
+flow drawn as `A --> B --> C` with Hebrew labels rendered as scrambled
+nonsense, because bidi reorders RTL labels against LTR arrows no matter
+how the block is styled. Hand-drawn arrow and box art is now banned; the
+script gained a ```` ```flow ```` fence that renders steps as a vertical
+column with downward arrows (immune to bidi reordering, since vertical
+arrows can't be flipped), a matching `<ol class="flow">` component for
+rich mode, and a warning whenever arrow art appears next to RTL text.

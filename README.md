@@ -44,7 +44,11 @@ with explain-mode:
   right-to-left languages render with correct text direction and
   right-alignment, while code, commands, and file paths stay correctly
   isolated left-to-right inside the same page — no more mixed-direction
-  text turning into a garbled mess.
+  text turning into a garbled mess. In an RTL language every substantive
+  answer goes to a page regardless of length, since even a four-line reply
+  mixing Hebrew and English scrambles in a chat window. Step-by-step flows
+  are drawn as vertical diagrams rather than `A --> B` arrow art, which
+  bidi reordering renders unreadable.
 - **Deterministic, token-cheap pages.** A bundled zero-dependency script
   builds every page from plain lesson content: identical styling each
   time, correct timestamps, RTL isolation applied mechanically — and the
